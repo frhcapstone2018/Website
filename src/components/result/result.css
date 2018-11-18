@@ -1,0 +1,26 @@
+div >Table{
+    width: 100%;
+}
+div >Table > Tbody >tr {
+    height: 20px;
+}
+
+div >Table > Thead >tr >td {
+    height: 5px;
+    padding-top: 4px;
+    padding-right: 6px;
+    padding-bottom: 4px;
+    padding-left: 6px;
+}
+
+
+div >Table > Tbody >tr >td {
+    height: 5px;
+    padding-top: 4px;
+    padding-right: 6px;
+    padding-bottom: 4px;
+    padding-left: 6px;
+}
+div >Table > Tbody >tr >td > div > div >span{
+    font-size: 0;
+}

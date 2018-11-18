@@ -1,0 +1,10 @@
+.Header >.HeaderTop{
+    background-color:#29c66d;
+}
+.ImageHeaderTop{
+    margin-left: auto;
+    margin-right: auto;
+    width: 50%;
+    max-width: 200px;
+    display: block;
+}
