@@ -1,11 +1,38 @@
 body {
   font-family: Helvetica, sans-serif;
 }
-.form > div > div{
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
 }
-.form > Button{
-  height: 55px;
-  width: 200px;
+th{
+  text-align: left;
+}
+td, th {
+  border: 1px solid #dddddd;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #f3f3f3;
+}
+
+.ResultArea{
+  padding: 20px;
+  border: 1px solid #120000;
+  border-radius: 4px;
+  margin: 10px;
+}
+.ResultArea > img{
+  width: 100%;
+}
+
+button{
+  position: absolute;
+  margin-right: 0px;
+  padding-right: 0px;
+  width:50%;
 }
 .react-autosuggest__container {
   position: relative;
@@ -13,9 +40,8 @@ body {
 
 .react-autosuggest__input {
   height: 30px;
-  padding: 10px 20px;
-  font-family: Helvetica, sans-serif;
-  font-weight: 300;
+  width: 100%;
+  padding: 10px 0px;
   font-size: 16px;
   border: 1px solid #aaa;
   border-radius: 4px;
@@ -56,7 +82,7 @@ body {
 
 .react-autosuggest__suggestion {
   cursor: pointer;
-  padding: 10px 20px;
+  padding: 10px 10px;
 }
 
 .react-autosuggest__suggestion:not(:first-child) {

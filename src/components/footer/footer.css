@@ -1,9 +1,7 @@
 .Footer{
     background-color:#d1d33b;
     position:relative;
-    left:0;
     bottom:0;
-    right:0;
     width:100%;
-    margin-top:90px;
+    height:20px;   /* Height of the footer */
 }

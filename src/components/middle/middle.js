@@ -4,17 +4,18 @@ import Autosuggest from 'react-autosuggest';
 import '../middle/middle.css';
 import physicianName from './auto-complete-data/physycianName';
 import MSDRGDescrption from './auto-complete-data/drg';
-import TextField from '@material-ui/core/TextField';
 import axios from 'axios';
 import '../result/result.css';
 import Slider from 'rc-slider';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
 import 'rc-slider/assets/index.css';
-import '../result/result.css'
+import '../result/result.css';
+import Switch from '@material-ui/core/Switch';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import SwipeableViews from 'react-swipeable-views';
+import trend from './images/trend.JPG';
+import StarRatings from 'react-star-ratings';
+import TextField from '@material-ui/core/TextField';
+
 // https://developer.mozilla.org/en/docs/Web/JavaScript/Guide/Regular_Expressions#Using_Special_Characters
 function escapeRegexCharacters(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -52,17 +53,19 @@ class Middle extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      Age: '',
       Physician: '',
       Date: '',
-      LOS: '',
       DRG: '',
       value: '',
       suggestionsP: [],
       suggestionsM: [],
       showResult: false,
+      Direct_Variable_total: '',
+      other_costs: '',
       Charges: '',
-      Direct_Variable: ''
+      Diabetic: false,
+      LOS: '',
+      password: ''
     };
   }
 
@@ -111,28 +114,33 @@ class Middle extends Component {
     if (mm < 10) {
       mm = '0' + mm
     }
-    axios.post('https://frh-model.herokuapp.com/', {
-      headers: { "Access-Control-Allow-Origin": "*" },
-      Age: this.state.Age,
-      'Admit Date': mm + '/' + dd + '/' + yyyy,
-      'Attending Physician': this.state.Physician,
-      DRG: this.state.DRG,
-      LOS: this.state.LOS
-    })
-      .then(function (response) {
+    var diabeticFactor = 1;
+    if (this.state.Diabetic) {
+      diabeticFactor = 1.20;
+    }
+    if (this.state.password === 'capstone') {
+      axios.post('https://frh-model.herokuapp.com/Costs', {
+        headers: { "Access-Control-Allow-Origin": "*" },
+        DRG: this.state.DRG,
+        'Admit Date': mm + '/' + dd + '/' + yyyy,
+        'Attending Physician': this.state.Physician,
+        D_Factor: diabeticFactor
+      }).then(function (response) {
         this.setState({
-          Charges: Math.max(1500, Math.round(((response.data[0])['Charges'])[0], 2)),
-          Direct_Variable: Math.max(1500, Math.round(((response.data[1])['Direct_Variable'])[0], 2)),
+          LOS: Math.round((response.data[3])['LOS'], 2),
+          Direct_Variable_total: Math.max(1500, Math.round(((response.data[0])['total_direct_variable'])[0], 2)),
+          other_costs: Math.max(1500, Math.round(((response.data[2])['total_other'])[0], 2)),
+          Charges: Math.max(1500, Math.round(((response.data[1])['total_Charges'])[0], 2)),
           showResult: true
         });
       }.bind(this))
-      .catch(function (error) {
-        console.log(error);
-      });
+        .catch(function (error) {
+          console.log(error);
+        });
+    }
   }
 
   render() {
-    const total_charges = this.state.Charges + this.state.Direct_Variable + 1.2 * this.state.Direct_Variable;
     const { suggestionsP, suggestionsM, Physician, DRG } = this.state;
     const inputPropsP = {
       placeholder: "Physician Name",
@@ -144,136 +152,162 @@ class Middle extends Component {
       value: DRG,
       onChange: this.onChangeM,
     };
+    const password = this.state.password;
+    if (password !== 'capstone') {
+      return <div className="form">
+        <TextField
+          label="password"
+          value={this.state.password}
+          onChange={e => this.setState({ password: e.target.value })}
+          margin="normal"
+          variant="outlined"
+        />
+      </div>
+    } else {
+      return (
+        <div >
+          <form >
+            <div className="form">
 
-    return (
-      <div >
-        <form >
-          <div className="form">
-            <TextField
-              label="Age"
-              value={this.state.Age}
-              onChange={e => this.setState({ Age: e.target.value })}
-              variant="outlined"
-              type="number"
-            /><br /><br />
-            <TextField
-              label="Expected LOS"
-              value={this.state.LOS}
-              onChange={e => this.setState({ LOS: e.target.value })}
-              variant="outlined"
-              type="number"
-            /><br /><br />
+              <Autosuggest
+                suggestions={suggestionsM}
+                onSuggestionsFetchRequested={this.onSuggestionsFetchRequestedM}
+                onSuggestionsClearRequested={this.onSuggestionsClearRequested}
+                getSuggestionValue={getSuggestionValue}
+                renderSuggestion={renderSuggestion}
+                inputProps={inputPropsM} /><br />
 
-            <Autosuggest
-              suggestions={suggestionsM}
-              onSuggestionsFetchRequested={this.onSuggestionsFetchRequestedM}
-              onSuggestionsClearRequested={this.onSuggestionsClearRequested}
-              getSuggestionValue={getSuggestionValue}
-              renderSuggestion={renderSuggestion}
-              inputProps={inputPropsM} /><br />
+              <Autosuggest
+                suggestions={suggestionsP}
+                onSuggestionsFetchRequested={this.onSuggestionsFetchRequestedP}
+                onSuggestionsClearRequested={this.onSuggestionsClearRequested}
+                getSuggestionValue={getSuggestionValue}
+                renderSuggestion={renderSuggestion}
+                inputProps={inputPropsP} />
 
-            <Autosuggest
-              suggestions={suggestionsP}
-              onSuggestionsFetchRequested={this.onSuggestionsFetchRequestedP}
-              onSuggestionsClearRequested={this.onSuggestionsClearRequested}
-              getSuggestionValue={getSuggestionValue}
-              renderSuggestion={renderSuggestion}
-              inputProps={inputPropsP} /><br />
-
-            <Button variant="contained" color="primary" onClick={this.onSubmitButtonClick}>
-              Submit
-        </Button>
-          </div>
-          {this.state.showResult && <div>
-            <h3>Table Summary:</h3>
-            <p> For a patient whose age is: {this.state.Age} when the surgeon
-         has predicted LOS to be: {this.state.LOS} the expected charges is: $ {this.state.Charges},
-         sum of direct variable charge is: $ {this.state.Direct_Variable} and the total charges is: $ {total_charges}</p>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Metric</TableCell>
-                  <TableCell>FRH</TableCell>
-                  <TableCell>Patient Level</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                <TableRow>
-                  <TableCell>Charges
-              <Slider
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={this.state.Diabetic}
+                    onChange={e => this.setState({ Diabetic: e.target.checked })}
+                    value="true"
+                  />
+                }
+                labelPlacement="start"
+                label="Diabetic?"
+              />
+              <Button variant="outlined" color="primary" onClick={this.onSubmitButtonClick}>
+                Predict
+          </Button>
+            </div>
+            <br />
+            {this.state.showResult && <div>
+              <h3>Results from prediction:</h3>
+              For <strong>{this.state.DRG}</strong><br />
+              The expected LOS is: <strong>{this.state.LOS}</strong><br />
+              This leads to an estimated costs of: <strong>${(this.state.Direct_Variable_total + this.state.other_costs).toLocaleString()}</strong><br />
+              The total "Controllable" cost is: <strong>${this.state.Direct_Variable_total.toLocaleString()}</strong>,(<strong>{(Math.round(this.state.Direct_Variable_total / (this.state.Direct_Variable_total + this.state.other_costs) * 100, 2)).toLocaleString()}
+                %</strong>of the total costs)<br /><br />
+              <table>
+                <tr>
+                  <th>Metric</th>
+                  <th>Amount</th>
+                  <th>Benchmark*</th>
+                </tr>
+                <tr>
+                  <td>Total Charges</td>
+                  <td>${this.state.Charges.toLocaleString()}</td>
+                  <td>
+                    <Slider
                       value={this.state.Charges}
                       orientation="horizontal"
                       min={this.state.Charges * (Math.random() * (0.8 - 0.3) + 0.3).toFixed(2)}
                       max={this.state.Charges * (Math.random() * (2 - 1) + 1).toFixed(2)}
                     />
-                  </TableCell>
-                  <TableCell>{this.state.Charges}</TableCell>
-                  <TableCell>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Total Costs</td>
+                  <td>${(this.state.Direct_Variable_total + this.state.other_costs).toLocaleString()}</td>
+                  <td>
                     <Slider
-                      value={this.state.Charges}
+                      value={this.state.Direct_Variable_total + this.state.other_costs}
                       orientation="horizontal"
-                      min={this.state.Charges * (Math.random() * (0.8 - 0.3) + 0.3).toFixed(2)}
-                      max={this.state.Charges * (Math.random() * (4 - 2) + 2).toFixed(2)}
-                      marks={[this.state.Charges * (Math.random() * (0.8 - 1.7) + 1.7).toFixed(2)]}
+                      min={(this.state.Direct_Variable_total + this.state.other_costs) * (Math.random() * (0.8 - 0.3) + 0.3).toFixed(2)}
+                      max={(this.state.Direct_Variable_total + this.state.other_costs) * (Math.random() * (2 - 1) + 1).toFixed(2)}
                     />
-                  </TableCell>
-                </TableRow>
-
-                <TableRow>
-                  <TableCell>Direct Variable Charges
-              <Slider
-                      value={this.state.Direct_Variable}
-                      orientation="horizontal"
-                      min={this.state.Direct_Variable * (Math.random() * (0.8 - 0.3) + 0.3).toFixed(2)}
-                      max={this.state.Direct_Variable * (Math.random() * (2 - 1) + 1).toFixed(2)}
-                    />
-                  </TableCell>
-                  <TableCell>{this.state.Direct_Variable}</TableCell>
-                  <TableCell>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Costs/Charge Ratio</td>
+                  <td colspan="2" align="center">{Math.round((this.state.Direct_Variable_total + this.state.other_costs) / this.state.Charges * 100, 2)}%</td>
+                </tr>
+                <tr>
+                  <td>Total "Controllable" cost</td>
+                  <td>${this.state.Direct_Variable_total.toLocaleString()}</td>
+                  <td>
                     <Slider
-                      value={this.state.Direct_Variable}
+                      value={this.state.Direct_Variable_total}
                       orientation="horizontal"
-                      min={this.state.Direct_Variable * (Math.random() * (0.8 - 0.3) + 0.3).toFixed(2)}
-                      max={this.state.Direct_Variable * (Math.random() * (4 - 2) + 2).toFixed(2)}
-                      marks={[this.state.Direct_Variable * (Math.random() * (0.8 - 1.7) + 1.7).toFixed(2)]}
+                      min={this.state.Direct_Variable_total * (Math.random() * (0.8 - 0.3) + 0.3).toFixed(2)}
+                      max={this.state.Direct_Variable_total * (Math.random() * (2 - 1) + 1).toFixed(2)}
                     />
-                  </TableCell>
-                </TableRow>
-
-                <TableRow>
-                  <TableCell>Total Charges
-              <Slider
-                      value={total_charges}
-                      orientation="horizontal"
-                      min={total_charges * (Math.random() * (0.8 - 0.3) + 0.3).toFixed(2)}
-                      max={total_charges * (Math.random() * (2 - 1) + 1).toFixed(2)}
+                  </td>
+                </tr>
+                <tr>
+                  <td>"Controllable"/ Total Cost Ratio</td>
+                  <td colspan="2" align="center">{Math.round(this.state.Direct_Variable_total / (this.state.Direct_Variable_total + this.state.other_costs) * 100, 2)}%</td>
+                </tr>
+                <tr><td></td></tr>
+                <tr>
+                  <td>NPS *</td>
+                  <td colspan="2" align="center">
+                    <StarRatings
+                      rating={(Math.random() * (5 - 3) + 3)}
+                      starRatedColor="green"
+                      numberOfStars={5}
+                      starDimension="20px"
+                      starSpacing="1px"
                     />
-                  </TableCell>
-                  <TableCell>{total_charges}</TableCell>
-                  <TableCell>
-                    <Slider
-                      value={total_charges}
-                      orientation="horizontal"
-                      min={total_charges * (Math.random() * (0.8 - 0.3) + 0.3).toFixed(2)}
-                      max={total_charges * (Math.random() * (4 - 2) + 2).toFixed(2)}
-                      marks={[total_charges * (Math.random() * (0.8 - 1.7) + 1.7).toFixed(2)]}
-                    />
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-            <h4>Note:</h4>
-            <p>Direct Variable Charges are sum of all Variable charges</p>
-            <p>Since direct fixed charges are equally divided and is irrespective of surgery or patient's age so as the case
-              with indirect cost, using the data we found that Total charges is approximately equal to = charges + total_direct variable
-            + 1.2 * direct variable</p>
-            <p>Actual Values: prediction for charges, direct variable charges & total charges</p>
-            <p>Predicted values: min, average & max cost of surgery. Also, Minimum and max for FRH on physician level</p>
-          </div>
-          }
-        </form>
-      </div>
-    );
+                  </td>
+                </tr>
+                <tr>
+                  <td>Expected LOS</td>
+                  <td colspan="2" align="center">{this.state.LOS} Days</td>
+                </tr>
+                <tr>
+                  <td>Quality of outcome *</td>
+                  <td colspan="2" align="center">
+                    <label><input type="radio" value="option1" checked={false} />Red</label><br />
+                    <label><input type="radio" value="option1" checked={false} />Yellow</label><br />
+                    <label><input type="radio" value="option1" checked={true} />Green</label>
+                  </td>
+                </tr>
+              </table>
+              <h3>Trend Charts *</h3>
+              <SwipeableViews>
+                <div className='ResultArea'>
+                  <h3>Charges</h3>
+                  <img src={trend} alt="Charge trends" />
+                  <br />
+                </div>
+                <div className='ResultArea'>
+                  <h3>Costs</h3>
+                  <img src={trend} alt="Charge trends" />
+                  <br />
+                </div>
+                <div className='ResultArea'>
+                  <h3>"Controllable" Fixed Cost</h3>
+                  <img src={trend} alt="Charge trends" />
+                  <br />
+                </div>
+              </SwipeableViews>
+              <p> Note: * indicated a value that is randomized, this is not a predicted value.</p>
+            </div>}
+          </form>
+        </div>
+      );
+    }
   }
 }
 

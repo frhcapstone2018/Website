@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import Header from './components/header/header';
-import Footer from './components/footer/footer';
 import Middle from './components/middle/middle';
 import './App.css';
 
@@ -19,9 +18,9 @@ class App extends Component {
         <div className="Middle">
           <Middle />
         </div>
-        <div className="Footer">
+        {/* <div className="Footer">
           <Footer />
-        </div>
+        </div> */}
       </div>
     );
   }
